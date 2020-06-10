@@ -1,0 +1,3 @@
+[submodule "crescale-gromacs"]
+	path = crescale-gromacs
+	url = https://github.com/bussilab/crescale-gromacs
