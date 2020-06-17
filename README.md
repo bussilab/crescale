@@ -1,6 +1,8 @@
-# Implementations of stochastic cell rescaling
+# Stochastic cell rescaling
 
-This repository contains the reference implementations for the stochastic cell rescaling barostat presented in Bernetti and Bussi, Pressure control using stochastic cell rescaling, [arXiv:2006.09250](https://arxiv.org/abs/2006.09250) (2020).
+This repository contains additional information related to the stochastic cell rescaling barostat presented in Bernetti and Bussi, Pressure control using stochastic cell rescaling, [arXiv:2006.09250](https://arxiv.org/abs/2006.09250) (2020).
+
+## Reference implementations
 
 The modified SimpleMD code is contained in [this directory](./simplemd).
 
@@ -18,3 +20,11 @@ Several branches and tags can be found:
 - Branch `master-crescale` is based on branch `master`.
 
 The changes in version 2019 are [relatively small](https://github.com/bussilab/crescale-gromacs/compare/release-2019..release-2019-crescale). The added code is basically a copy of the Berendsen code, with some modification. The changes in version 2020 are [slighly more complicated](https://github.com/bussilab/crescale-gromacs/compare/release-2020..release-2020-crescale) since in this version the coordinate update might be done on the GPU only. In this case, it was necessary to add a function to allow scaling of the velocities to be performed on the GPU. Changes on master branch are [similar](https://github.com/bussilab/crescale-gromacs/compare/master..master-crescale) and just required some adjustment to be compatible with master branch.
+
+## Input files
+
+Input files are available in [this directory](./input_file).
+
+## Analysis scripts
+
+A notebook to perform the analysis reported in the manuscript is available [here](./Supporting_Info_figures.ipynb).
