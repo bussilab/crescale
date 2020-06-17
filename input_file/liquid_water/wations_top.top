@@ -1,0 +1,33 @@
+;
+;       File 'topol_RNA_chain_C.itp' was generated
+;       By user: mbernett (8093)
+;       On host: klee.sbp.sissa.it
+;       At date: Fri Dec 14 16:34:47 2018
+
+;
+;       This is a include topology file
+;
+
+; Include forcefield parameters
+#include "amber99sb-ildn/forcefield.itp"
+
+; Include water topology
+#include "amber99sb-ildn/tip3p.itp"
+
+#ifdef POSRES_WATER
+; Position restraint for each water oxygen
+[ position_restraints ]
+;  i funct       fcx        fcy        fcz
+   1    1       1000       1000       1000
+#endif
+
+; Include topology for ions
+#include "amber99sb-ildn/ions.itp"
+
+[ system ]
+; Name
+Liquid water
+
+[ molecules ]
+; Compound        #mols
+SOL               2850

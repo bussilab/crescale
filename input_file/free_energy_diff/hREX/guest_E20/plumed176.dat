@@ -1,0 +1,12 @@
+# vim:ft=plumed
+WHOLEMOLECULES STRIDE=1 ENTITY0=1-58
+
+rmsd: RMSD REFERENCE=reference_ligand.pdb TYPE=OPTIMAL
+
+# APPLY RESTRAINTS:
+r-rmsd: RESTRAINT ARG=rmsd AT=0 KAPPA=209200
+
+#printout frequency
+PRINT ARG=rmsd,r-rmsd.bias STRIDE=100 FILE=COLVAR
+
+#endofinput 

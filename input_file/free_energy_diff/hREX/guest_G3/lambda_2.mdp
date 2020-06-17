@@ -1,0 +1,141 @@
+; Run control
+integrator               = md
+tinit                    = 0
+dt                       = 0.002
+nsteps                   = 100000000
+comm-mode                = Linear
+nstcomm                  = 1
+
+; Output control
+nstlog                   = 1000
+nstcalcenergy            = 1
+nstenergy                = 500
+nstxtcout                = 2500
+;nstxout-compressed       = 1000
+; Neighborsearching and short-range nonbonded interactions
+nstlist                  = 1
+ns_type                  = grid
+pbc                      = xyz
+rlist                    = 1.0
+
+; Electrostatics
+cutoff-scheme            = verlet
+coulombtype              = PME
+coulomb-modifier         = none
+rcoulomb                 = 1.0
+
+; van der Waals
+vdw-type                 = Cut-off
+vdw-modifier             = Potential-switch
+rvdw-switch              = 0.9
+rvdw                     = 1.0
+
+; Apply long range dispersion corrections for Energy and Pressure 
+DispCorr                 = EnerPres
+
+; Spacing for the PME/PPPM FFT grid
+fourier-nx               = 48
+fourier-ny               = 48
+fourier-nz               = 48
+; EWALD/PME/PPPM parameters = 
+pme_order                = 4
+ewald_rtol               = 1e-05
+ewald_geometry           = 3d
+epsilon_surface          = 0
+
+; Temperature coupling
+tcoupl                   = v-rescale
+nsttcouple               = 1
+tc_grps                  = System
+tau_t                    = 0.5
+ref_t                    = 298.15
+; Pressure coupling is on for NPT
+pcoupl                   = C-rescale
+nstpcouple               = 1
+compressibility          = 4.5e-5 ; bar^-1
+pcoupltype               = isotropic
+ref_p                    = 1
+tau_p                    = 0.5
+
+; velocity generation
+gen_vel                  = yes
+gen-temp                 = 298.15
+gen-seed                 = 46456789 ; need to randomize the seed each time.
+
+; options for bonds
+constraints              = h-bonds  ; we only have C-H bonds here
+; Type of constraint algorithm
+constraint-algorithm     = lincs
+; Highest order in the expansion of the constraint coupling matrix
+lincs-order              = 12
+lincs-iter               = 2
+
+
+; FREE ENERGY CONTROL OPTIONS =
+free-energy 		= yes
+calc-lambda-neighbors 	= 1
+sc-alpha 		= 0.5
+sc-power 		= 1
+sc-sigma 		= 0.5
+couple-moltype 		= GST
+couple-lambda0 		= vdw-q
+couple-lambda1 		= none
+couple-intramol 	= no
+init-lambda-state       = 2 
+
+;nstexpanded 		= 100
+;nstdhdl 		= 1000
+;dhdl-print-energy 	= total
+;nst-transition-matrix 	= 400000
+;
+;lmc-seed                = 1000
+;lmc-gibbsdelta          = -1
+;lmc-forced-nstart       = 0
+;symmetrized-transition-matrix = yes
+;
+;lmc-stats 		= wang-landau
+;lmc-move 		= metropolized-gibbs
+;lmc-weights-equil 	= wl-delta ; THIS WAS NOT COMMENTED
+; weight-equil-wl-delta 	= 0.001
+; init-wl-delta 		= 2
+;separate-dhdl-file 	= yes
+; wl-scale 		= 0.8
+; wl-ratio 		= 0.7
+
+coul-lambdas         = 0.0 0.05 0.1 0.15 0.2 0.25 0.3 0.35 0.4 0.45 0.5 0.55 0.6 0.65 0.7 0.75 0.8 0.85 0.9 0.95 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.00 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0 1.0
+vdw-lambdas          = 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.1 0.2 0.3 0.4 0.45 0.5 0.55 0.6 0.63 0.66 0.69 0.72 0.75 0.78 0.81 0.84 0.88 0.92 1.0
+restraint-lambdas    = 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 1e-6 2e-6 4e-6 1e-5 2e-5 4e-5 1e-4 2e-4 4e-4 1e-3 2e-3 4e-3 1e-2 2e-2 4e-2 0.1 0.2 0.4 1.0
+fep-lambdas          = 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+init-lambda-weights  = 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0
+
+;; PULL CODE
+;pull                     = yes
+;pull-ngroups             = 2
+;pull-ncoords             = 2
+;pull-group1-name         = HST 
+;pull-group2-name         = GST 
+;pull-group1-pbcatom      = 187
+;pull-pbc-ref-prev-step-com = yes
+;
+;pull-coord1-groups       = 1 2 
+;pull-coord1-type         = umbrella
+;pull-coord1-geometry     = distance
+;pull-coord1-dim          = Y Y Y
+;pull-coord1-origin       = 0.0 0.0 0.0
+;pull-coord1-vec          = 0.0 0.0 0.0
+;pull-coord1-start        = no
+;pull-coord1-init         = 0
+;pull-coord1-rate         = 0
+;pull-coord1-k            = 0; kJ mol^-1 nm^-2
+;pull-coord1-kB           = 1000; kJ mol^-1 nm^-2
+;
+;pull-coord2-groups       = 1 2
+;pull-coord2-type         = flat_bottom
+;pull-coord2-geometry     = distance
+;pull-coord2-dim          = Y Y Y
+;pull-coord2-origin       = 0.0 0.0 0.0
+;pull-coord2-vec          = 0.0 0.0 0.0
+;pull-coord2-start        = no
+;pull-coord2-rate         = 0
+;pull-coord2-init         = 1.5
+;pull-coord2-k            = 1000; kJ mol^-1 nm^-2

@@ -1,0 +1,48 @@
+title                    = MD simulation of liquid water
+;Preprocessor
+cpp                      = /lib/cpp
+;Directories to include in the topology format
+;include                 = -I../top
+; Define can be used to control processes
+;define                   = 
+;Run control: A leap-frog algorithm for integrating Newton's equations. 
+integrator               = md
+dt                       = 0.002
+nsteps                   = 5000000               ;number of steps
+nstxout                  = 
+nstvout                  = 
+nstlog                   = 200
+nstenergy                = 200
+nstxtcout                = 2500
+xtc_grps                 = System     ;group(s) to write to xtc trajectory
+energygrps               = System       ;group(s) to write to energy file 
+nstlist                  = 10                   ;Frequency to update the neighbor list (and the long-range forces, 
+                                                ;when using twin-range cut-off's). 
+ns_type                  = grid                 ;Make a grid in the box and only check atoms in neighboring grid cells 
+                                                ;when constructing a new neighbor list every nstlist steps. 
+cutoff-scheme=Verlet
+verlet-buffer-tolerance=-1
+coulombtype = PME 
+rvdw =  1.0
+rlist =  1.0
+rcoulomb =  1.0
+;fourierspacing = 0.12 
+pbc                      = xyz                  ; Periodic boudary conditions in all the directions 
+tcoupl                   = v-rescale            ;Temperature coupling
+tc-grps                  = System ; Water_and_ions
+tau_t                    = 0.1    ;  WAS 0.1
+ref_t                    = 300 
+
+Pcoupl                   = C-rescale    ;Pressure coupling
+Pcoupltype               = isotropic
+tau_p                    = 2    ; was 2.0
+nstpcouple               = 1
+compressibility          = 4.5e-5
+ref_p                    = 1.0
+refcoord_scaling         = no
+continuation             = yes
+gen_vel                  = no                   ;Velocity generation
+gen_temp                 = 300
+gen_seed                 = -1
+;Constrain all bonds
+constraints              = h-bonds

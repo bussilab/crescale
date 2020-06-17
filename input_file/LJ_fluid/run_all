@@ -1,0 +1,68 @@
+
+for taup in 0.01 0.02 0.05 0.1 0.2 0.5 1.0 2.0 5.0 10.0 20.0 50.0 100.0
+do
+for bt in E R T
+do
+for bsv in T F
+do
+nst=1
+suffix=${taup}_${bt}_${bsv}_${nst}
+cat > in_$suffix << EOF
+inputfile liquid.xyz
+outputfile output.xyz
+temperature 1.5
+tstep 0.005
+friction 10.0
+forcecutoff 2.5
+listcutoff  3.0
+nstep 10000000
+nconfig 1000000 trajectory.xyz
+nstat   10 new_energies_$suffix.dat
+pressure 1.0
+taup $taup
+nstbaro $nst
+barotype $bt
+baroscalev $bsv
+svr true
+EOF
+
+../cpp/simplemd.x < in_$suffix &
+
+done
+done
+done
+
+for nst in 2 5 10 20 50 100 # skip 1 (done above)
+do
+for bt in E R T
+do
+for bsv in T F
+do
+taup=1.0
+suffix=${taup}_${bt}_${bsv}_${nst}
+cat > in_$suffix << EOF
+inputfile liquid.xyz
+outputfile output.xyz
+temperature 1.5
+tstep 0.005
+friction 10.0
+forcecutoff 2.5
+listcutoff  3.0
+nstep 10000000
+nconfig 1000000 trajectory.xyz
+nstat   10 new_energies_$suffix.dat
+pressure 1.0
+taup $taup
+nstbaro $nst
+barotype $bt
+baroscalev $bsv
+svr true
+EOF
+
+../cpp/simplemd.x < in_$suffix &
+
+done
+done
+done
+
+wait
