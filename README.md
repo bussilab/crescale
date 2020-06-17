@@ -1,6 +1,6 @@
 # Implementations of stochastic cell rescaling
 
-This repository contains the reference implementations for the stochastic cell rescaling barostat presented in Bernetti and Bussi, in preparation.
+This repository contains the reference implementations for the stochastic cell rescaling barostat presented in Bernetti and Bussi, Pressure control using stochastic cell rescaling, [arXiv:2006.09250](https://arxiv.org/abs/2006.09250) (2020).
 
 The modified SimpleMD code is contained in [this directory](./simplemd).
 
