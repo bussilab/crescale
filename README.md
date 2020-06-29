@@ -12,6 +12,10 @@ The modified GROMACS code is contained in [this repository](https://github.com/b
 
 Input files are available in [this directory](./input_file).
 
+## Generated datasets
+
+The generated datasets are available on [Zenodo](https://doi.org/10.5281/zenodo.3921885).
+
 ## Analysis scripts
 
 A notebook to perform the analysis reported in the manuscript is available [here](./Supporting_Info_figures.ipynb).
