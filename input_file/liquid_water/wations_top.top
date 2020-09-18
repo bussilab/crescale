@@ -9,10 +9,10 @@
 ;
 
 ; Include forcefield parameters
-#include "amber99sb-ildn/forcefield.itp"
+#include "amber99sb-ildn.ff/forcefield.itp"
 
 ; Include water topology
-#include "amber99sb-ildn/tip3p.itp"
+#include "amber99sb-ildn.ff/tip3p.itp"
 
 #ifdef POSRES_WATER
 ; Position restraint for each water oxygen
@@ -22,7 +22,7 @@
 #endif
 
 ; Include topology for ions
-#include "amber99sb-ildn/ions.itp"
+#include "amber99sb-ildn.ff/ions.itp"
 
 [ system ]
 ; Name
