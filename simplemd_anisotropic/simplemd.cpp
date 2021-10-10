@@ -348,9 +348,8 @@ void compute_engkin(const int natoms,const vector<double>& masses,const vector<V
   }
 }
 
-Tensor compute_matrixexp(const Tensor& in)//,const bool rotations)
+Tensor compute_matrixexp(const Tensor& in)
 // calculate the exponential matrix exp(in) using Padé approximation up to 6th order
-// or closed-form solution if input matrix is upper triangular  
 {
   auto id=Tensor::identity();
   Tensor in2=matmul(in,in);
