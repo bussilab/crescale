@@ -8,6 +8,8 @@ The modified SimpleMD code is contained in [this directory](./simplemd).
 
 The modified GROMACS code is contained in [this repository](https://github.com/bussilab/crescale-gromacs).
 
+The modified LAMMPS code is contained in [this repository](https://github.com/bussilab/crescale-lammps).
+
 ## Input files
 
 Input files are available in [this directory](./input_file).
