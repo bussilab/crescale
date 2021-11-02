@@ -805,7 +805,7 @@ int main(FILE*in,FILE*out){
         Tensor stress_dev=pressure-pressure_hydro*Tensor::identity();
         Tensor sigma=volume0*matmul(transpose(box_start_inv),matmul(stress_dev,box_start_inv));
         pressure_dev=+matmul(transpose(box),matmul(0.5*(sigma+transpose(sigma)),box))/volume;
-        lambda_f+=2*lambda*(pressure_dev[0][0]+pressure_dev[1][1]+pressure_dev[2][2])/3.0;
+        lambda_f-=2*lambda*(pressure_dev[0][0]+pressure_dev[1][1]+pressure_dev[2][2])/3.0;
       }
       double lambda_random=random.Gaussian();
 
@@ -896,7 +896,7 @@ int main(FILE*in,FILE*out){
         Tensor stress_dev=pressure-pressure_hydro*Tensor::identity();
         Tensor sigma=volume0*matmul(transpose(box_start_inv),matmul(stress_dev,box_start_inv));
         pressure_dev=+matmul(transpose(box),matmul(0.5*(sigma+transpose(sigma)),box))/volume;
-        lambda_f+=2*lambda*(pressure_dev[0][0]+pressure_dev[1][1]+pressure_dev[2][2])/3.0;
+        lambda_f-=2*lambda*(pressure_dev[0][0]+pressure_dev[1][1]+pressure_dev[2][2])/3.0;
       }
 
       engint+=0.5*dlambda_save*lambda_f + 0.25*lambda_D/temperature*nstbaro*tstep*lambda_f*lambda_f - 0.5*temperature*log(volume);
