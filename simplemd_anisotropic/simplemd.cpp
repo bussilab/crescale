@@ -842,7 +842,7 @@ int main(FILE*in,FILE*out){
         engint+=-0.5*temperature*nstbaro*tstep/(b*b)*A2[i][j]*A2[i][j] + temperature/(b*b)*deps_matrix[i][j]*A2[i][j];
       }
 
-      // 3) propagation of lambda for half timestep
+// 3) propagation of lambda for half timestep
       lambda_random=random.Gaussian();
       dlambda+=lambda_D/temperature*lambda_f*nstbaro*tstep/2.0 + sqrt(lambda_D*nstbaro*tstep)*lambda_random;
 
@@ -890,6 +890,15 @@ int main(FILE*in,FILE*out){
         pint_scalar+=(ndeg/3.0)*temperature/volume;
       }
       double lambda_f=-2*lambda*(pressure_hydro-pint_scalar-0.5*temperature/volume);
+      // deviatoric correction
+      Tensor pressure_dev;
+      if(deviatoric) {     
+        Tensor stress_dev=pressure-pressure_hydro*Tensor::identity();
+        Tensor sigma=volume0*matmul(transpose(box_start_inv),matmul(stress_dev,box_start_inv));
+        pressure_dev=+matmul(transpose(box),matmul(0.5*(sigma+transpose(sigma)),box))/volume;
+        lambda_f+=2*lambda*(pressure_dev[0][0]+pressure_dev[1][1]+pressure_dev[2][2])/3.0;
+      }
+
       engint+=0.5*dlambda_save*lambda_f + 0.25*lambda_D/temperature*nstbaro*tstep*lambda_f*lambda_f - 0.5*temperature*log(volume);
       if(!baroscalev) engint-=ndeg/3.0*temperature*log(volume);
 
@@ -905,9 +914,6 @@ int main(FILE*in,FILE*out){
         Tensor A=prefac_det*(pext-pint-temperature/volume*Tensor::identity());      
         // deviatoric correction
         if(deviatoric) {     
-          Tensor stress_dev=pressure-pressure_hydro*Tensor::identity();
-          Tensor sigma=volume0*matmul(transpose(box_start_inv),matmul(stress_dev,box_start_inv));
-          Tensor pressure_dev=matmul(transpose(box),matmul(0.5*(sigma+transpose(sigma)),box))/volume;
           A+=prefac_det*pressure_dev;
         }
         Tensor A2=(A-(A[0][0]+A[1][1]+A[2][2])/3.0*Tensor::identity());
