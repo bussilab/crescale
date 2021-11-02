@@ -515,7 +515,7 @@ void write_statistics(const string & statfile,const int istep,const double tstep
   }
   double virialscalar=virial[0][0]+virial[1][1]+virial[2][2];
   double engkinscalar=engkin[0][0]+engkin[1][1]+engkin[2][2];
-  fprintf(write_statistics_fp,"%d %f %f %f %f %f %f %f",
+  fprintf(write_statistics_fp,"%d %f %f %f %f %f %f",
           istep,istep*tstep,2.0*engkinscalar/(3.0*natoms),engconf,engkinscalar+engconf+engint,volume,virialscalar);
   if(barotype=='A' || barotype=='T') fprintf(write_statistics_fp," %f %f %f %f %f %f %f %f %f",
                             box[0][0],box[1][1],box[2][2],box[0][1],box[0][2],box[1][0],box[1][2],box[2][0],box[2][1]);
@@ -787,7 +787,7 @@ int main(FILE*in,FILE*out){
 // Barostat: anisotropic implementation, time-reversible integrator 
     else if(taup>0.0 && istep%nstbaro==0 && barotype=='T')
     {
-      // 1) propagation of lambda for half timestep
+// 1) propagation of lambda for half timestep
       double volume=box.determinant(); 
       double lambda=sqrt(volume);
       double lambda_D=0.25*temperature*betaT/taup;
@@ -798,13 +798,21 @@ int main(FILE*in,FILE*out){
       } else {
         pint_scalar+=(ndeg/3.0)*temperature/volume;
       }
-      double lambda_f=-2*lambda*(pressure_hydro-pint_scalar-0.5*temperature/volume);   
+      double lambda_f=-2*lambda*(pressure_hydro-pint_scalar-0.5*temperature/volume);
+      // deviatoric correction
+      Tensor pressure_dev;
+      if(deviatoric) {     
+        Tensor stress_dev=pressure-pressure_hydro*Tensor::identity();
+        Tensor sigma=volume0*matmul(transpose(box_start_inv),matmul(stress_dev,box_start_inv));
+        pressure_dev=+matmul(transpose(box),matmul(0.5*(sigma+transpose(sigma)),box))/volume;
+        lambda_f+=2*lambda*(pressure_dev[0][0]+pressure_dev[1][1]+pressure_dev[2][2])/3.0;
+      }
       double lambda_random=random.Gaussian();
 
       double dlambda=lambda_D/temperature*lambda_f*nstbaro*tstep/2.0 + sqrt(lambda_D*nstbaro*tstep)*lambda_random;
       dlambda_save=dlambda;
 
-      // 2) propagation of h for a full timestep, at fixed volume
+// 2) propagation of h for a full timestep, at fixed volume
       double volumenew=(lambda+dlambda)*(lambda+dlambda); 
       double b=sqrt(-2.0*prefac_det*temperature/volumenew);
 
@@ -818,9 +826,6 @@ int main(FILE*in,FILE*out){
       Tensor A=prefac_det*(pext-pint-temperature/volume*Tensor::identity());      
       // deviatoric correction
       if(deviatoric) {     
-        Tensor stress_dev=pressure-pressure_hydro*Tensor::identity();
-        Tensor sigma=volume0*matmul(transpose(box_start_inv),matmul(stress_dev,box_start_inv));
-        Tensor pressure_dev=matmul(transpose(box),matmul(0.5*(sigma+transpose(sigma)),box))/volume;
         A+=prefac_det*pressure_dev;
       }
       Tensor A2=(A-(A[0][0]+A[1][1]+A[2][2])/3.0*Tensor::identity());    
