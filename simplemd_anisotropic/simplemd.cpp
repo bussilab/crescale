@@ -544,7 +544,9 @@ int main(FILE*in,FILE*out){
 // all of them have a reasonable default value, set in read_input()
   double      tstep;             // simulation timestep
   double      temperature;       // temperature
+  double      volume;            // volume
   Tensor      pressure;          // external pressure (stress) tensor
+  Tensor      pressure_dev;      // deviatoric pressure contribution
   double      pressure_hydro;    // scalar external pressure
   double      friction;          // friction for Langevin dynamics (for NVE, use 0)
   double      taup;              // for barostat
@@ -712,7 +714,7 @@ int main(FILE*in,FILE*out){
 // Barostat: isotropic implementation
     if(taup>0.0 && istep%nstbaro==0 && barotype=='I')
     {
-      double volume=box.determinant();
+      volume=box.determinant();
       double lambda=sqrt(volume);
       double lambda_D=0.25*temperature*betaT/taup;
       double pint_scalar=(virial[0][0]+virial[1][1]+virial[2][2])/(3*volume);
@@ -746,7 +748,7 @@ int main(FILE*in,FILE*out){
 // Barostat: anisotropic implementation, Euler integrator
     else if(taup>0.0 && istep%nstbaro==0 && barotype=='A')
     {
-      double volume=determinant(box);
+      volume=determinant(box);
       double D_box=-prefac_det*temperature/volume;
 
       Tensor pint=virial/volume;
@@ -773,7 +775,7 @@ int main(FILE*in,FILE*out){
       if(deviatoric) {     
         Tensor stress_dev=pressure-pressure_hydro*Tensor::identity();
         Tensor sigma=volume0*matmul(transpose(box_start_inv),matmul(stress_dev,box_start_inv));
-        Tensor pressure_dev=matmul(transpose(box),matmul(0.5*(sigma+transpose(sigma)),box))/volume;
+        pressure_dev=matmul(transpose(box),matmul(0.5*(sigma+transpose(sigma)),box))/volume;
 	rscaling+=prefac_det*pressure_dev*nstbaro*tstep;
       }
 
@@ -788,7 +790,7 @@ int main(FILE*in,FILE*out){
     else if(taup>0.0 && istep%nstbaro==0 && barotype=='T')
     {
 // 1) propagation of lambda for half timestep
-      double volume=box.determinant(); 
+      volume=box.determinant(); 
       double lambda=sqrt(volume);
       double lambda_D=0.25*temperature*betaT/taup;
       double pint_scalar=(virial[0][0]+virial[1][1]+virial[2][2])/(3*volume);
@@ -800,7 +802,6 @@ int main(FILE*in,FILE*out){
       }
       double lambda_f=-2*lambda*(pressure_hydro-pint_scalar-0.5*temperature/volume);
       // deviatoric correction
-      Tensor pressure_dev;
       if(deviatoric) {     
         Tensor stress_dev=pressure-pressure_hydro*Tensor::identity();
         Tensor sigma=volume0*matmul(transpose(box_start_inv),matmul(stress_dev,box_start_inv));
@@ -879,7 +880,7 @@ int main(FILE*in,FILE*out){
 // Barostat: isotropic implementation, compute energy drift
     if(taup>0.0 && istep%nstbaro==0 && (barotype=='I' || barotype=='T'))
     {
-      double volume=box.determinant();
+      volume=box.determinant();
       double lambda=sqrt(volume);
       double lambda_D=0.25*temperature*betaT/taup;
       double pint_scalar=(virial[0][0]+virial[1][1]+virial[2][2])/(3*volume);
@@ -891,7 +892,6 @@ int main(FILE*in,FILE*out){
       }
       double lambda_f=-2*lambda*(pressure_hydro-pint_scalar-0.5*temperature/volume);
       // deviatoric correction
-      Tensor pressure_dev;
       if(deviatoric) {     
         Tensor stress_dev=pressure-pressure_hydro*Tensor::identity();
         Tensor sigma=volume0*matmul(transpose(box_start_inv),matmul(stress_dev,box_start_inv));
@@ -922,6 +922,10 @@ int main(FILE*in,FILE*out){
                   + temperature/(b_save*b_save)*deps_matrix_save[i][j]*A2[i][j];
         }
       }
+    }
+
+    if(deviatoric) {
+      engconf+=(pressure_dev[0][0]+pressure_dev[1][1]+pressure_dev[2][2])*volume/2.0;
     }
 
     for(int iatom=0;iatom<natoms;iatom++) for(int k=0;k<3;k++)
