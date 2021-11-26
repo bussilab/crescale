@@ -23,3 +23,5 @@ The generated datasets for the isotropic version are available on [Zenodo](https
 ## Analysis scripts
 
 A notebook to perform the analysis reported in the manuscript related to the isotropic version is available [here](./Supporting_Info_figures.ipynb).
+
+A notebook to perform the analysis reported in the manuscript related to the anisotropic version is available [here](./anisotropic).
