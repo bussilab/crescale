@@ -1,6 +1,6 @@
 # Stochastic cell rescaling
 
-This repository contains additional information related to the stochastic cell rescaling barostat presented in Bernetti and Bussi, Pressure control using stochastic cell rescaling, [arXiv:2006.09250](https://arxiv.org/abs/2006.09250) (2020). It also contains materials associated to the anisotropic version of the barostat (manuscript currently in preparation). More materials associated to the anisotropic version will be added soon (work in progress).
+This repository contains additional information related to the stochastic cell rescaling barostat presented in Bernetti and Bussi, Pressure control using stochastic cell rescaling, [arXiv:2006.09250](https://arxiv.org/abs/2006.09250) (2020). It also contains materials associated to the anisotropic version of the barostat (manuscript submitted).
 
 ## Reference implementations
 
@@ -19,6 +19,8 @@ Input files for the isotropic version are available in [this directory](./input_
 ## Generated datasets
 
 The generated datasets for the isotropic version are available on [Zenodo](https://doi.org/10.5281/zenodo.3921885).
+
+The generated datasets for the anisotropic version are available on Zenodo (in preparation).
 
 ## Analysis scripts
 
