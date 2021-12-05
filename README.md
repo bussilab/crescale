@@ -20,7 +20,7 @@ Input files for the isotropic version are available in [this directory](./input_
 
 The generated datasets for the isotropic version are available on [Zenodo](https://doi.org/10.5281/zenodo.3921885).
 
-The generated datasets for the anisotropic version are available on Zenodo (in preparation).
+The generated datasets for the anisotropic version are available on [Zenodo](https://doi.org/10.5281/zenodo.5753467).
 
 ## Analysis scripts
 
