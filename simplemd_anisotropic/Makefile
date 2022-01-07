@@ -1,5 +1,5 @@
-simplemd.x: Random.cpp Vector.cpp simplemd.cpp Vector.h Random.h
-	g++ -O Random.cpp Vector.cpp simplemd.cpp -o simplemd.x
+simplemd.x: Random.cpp simplemd.cpp Random.h
+	g++ -O Random.cpp simplemd.cpp -o simplemd.x -lplumedKernel
 
 clean:
 	rm -f ./simplemd.x
