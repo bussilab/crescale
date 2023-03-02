@@ -1,0 +1,219 @@
+thermo_modify flush yes
+
+# ------ Units -------------------------------------
+units metal                                           # eV, ps, Angstrom, bar
+
+# ------ Timer ----------- -------------------------
+timer timeout 23:55:00 every 1000
+
+# ------ Simulation files --------------------------
+variable ff_file        index         tip4p_ice.lmp   # force field file
+variable coord_file     index             coord.lmp   # coordinates file
+variable runID          index                     0   # run ID for final restart
+variable rstID          equal            ${runID}-1   # ID of previous  restart
+variable traj_file      index   trajectory.${runID}   # trajectory file - no extension
+variable old_restart    index      restart.${rstID}   # previous restart file
+variable new_restart    index      restart.${runID}   # current restart file
+
+# ------ Simulation type ---------------------------
+variable minimisation   index                   no    # energy minimisation
+variable relax_cell     index                   no    # energy minimisation with variable cell
+variable md             index                  yes    # molecular dynamics
+variable plumed         index                   no    # PLUMED: metadynamics, umbrella sampling...
+variable fep            index                   no    # free energy perturbation
+variable ti             index                   no    # thermodynamic integration
+variable multiRun       index                   no    # task farming of runs
+
+# ------ Molecular dynamics variables --------------
+variable ens            index                  nvt    # ensemble (nve, nph, nvt, npt)
+variable timestep       index                0.001    # simulation timestep (time units)
+variable nsteps         index              4000000    # number of MD steps
+variable nequil         index               100000    # equilibration steps - FEP only
+
+# ------ Thermostat --------------------------------
+variable tst            index                 csvr    # thermostat (nh, ber, lang, csvr)
+variable temp           index                 270.    # starting temperature (K)
+variable trel           index                  0.1    # thermostat relaxation time (time units)
+
+# ------ Barostat (only NVT simulations) -----------
+variable brst           index                cresc    # barostat (no, cresc, ber) 
+variable bulkm          index               105415    # bulk modulus (pressure units)
+variable npttype        index                  tri    # type of NPT (iso, aniso, tri, z...)
+variable pres           index                  1.0    # pressure bar/atm
+variable prel           index                  0.1    # barostat relaxation time (time units)
+
+# ------ Output ------------------------------------
+variable nthermo        index                   10    # thermodynamic data output frequency
+variable ntraj          index                 2500    # trajectory output frequency - all system
+variable trajType       index                  xtc    # trajectory type (dcd, xtc, xyz)
+
+#T -----f Random number seeds -----------------------
+variable iseed0         index                15973    # Random seed for initial velocities
+variable iseed1         index                96248    # Random seed for the stochastic thermostats
+variable iseed2         index                 1998    # Random seed for CRescale barostat
+
+# ------ PLUMED variables --------------------------
+variable plumed_infile  index         "plumed.inp"
+variable plumed_dir     index            "Walker_"
+
+# ------ FEP variables -----------------------------
+variable fep_file       index            "fep.inp"
+variable fep_dir        index                 "./"
+variable gewald         index                  0.3
+
+# ------ FEP variables -----------------------------
+variable multi_dir      index               "run_"
+
+# ------ Task farming ------------------------------
+variable nRepl          uloop                    6  
+variable replID equal ${nRepl}-1
+if "${replID} < 0" then "jump SELF end_farming"
+  variable i0 equal ${iseed0}+13*${nRepl}
+  variable i1 equal ${iseed1}+13*${nRepl}
+  if "${fep} == yes && ${replID} < 10" then "variable dir string ${fep_dir}0${replID}"
+  if "${fep} == yes && ${replID} > 9" then "variable dir string ${fep_dir}${replID}"
+  if "${plumed} == yes" then "variable dir string ${plumed_dir}${replID}"
+  if "${multiRun} == yes" then "variable dir string ${multi_dir}${replID}"
+  if "${plumed} == yes || ${fep} == yes || ${multiRun} == yes" then "shell cd ${dir}"
+label end_farming
+
+# ------ Atom Style --------------------------------
+atom_style full
+
+# ------ Period Boundary Conditions ----------------
+boundary p p p                                        # 3D Periodic Boundary Conditions
+
+# ------ Read Coordinates and Topology -------------
+if "${runID} == 0" then "read_data ${coord_file}"     # Charges, coordinates and topology are defined here
+if "${runID} >= 1" then "read_restart ${old_restart}" # Restart simulation
+change_box all triclinic
+
+# ------ Read Force Field --------------------------
+include ${ff_file}
+
+# ------ Group definitions -------------------------
+
+# ------ Energy minimisation -----------------------
+if "${runID} > 0" then "jump SELF end_minimise"
+if "${minimisation} == no && ${relax_cell} == no" then "jump SELF end_minimise"
+  print "Doing CG minimisation"
+  variable etol           index             1e-6     # energy change threshold
+  variable ftol           index             1e-6     # force change threshold
+  variable maxiter        index           100000     # max number of iterations
+
+  if "${relax_cell} == yes" then "fix box all box/relax aniso 0.0 nreset 100"
+
+  min_style cg
+  min_modify line quadratic
+  minimize ${etol} ${ftol} ${maxiter} ${maxiter}
+  reset_timestep 0
+label end_minimise
+
+# ------ PLUMED ------------------------------------
+if "${plumed} == no" then "jump SELF end_plumed"
+  print "--- RUNNING PLUMED ---"
+  fix plmd all plumed plumedfile ${plumed_infile} outfile plumed.out
+label end_plumed
+
+# ------ Ensemble ----------------------------------
+group free id > 0
+# nve/nph
+if "${ens} == nve"                  then "fix md free nve"
+if "${ens} == nph"                  then "fix md free nph ${npttype} ${pres} ${pres} ${prel} tchain 5 pchain 5 mtk yes"
+if "${ens} == nph || ${ens} == nve" then "jump SELF end_ensemble"
+# Nose-Hoover
+if "${ens} == nvt && ${tst} == nh"  then "fix md free nvt temp ${temp} ${temp} ${trel} tchain 5"
+if "${ens} == npt && ${tst} == nh"  then "fix md free npt temp ${temp} ${temp} ${trel} ${npttype} ${pres} ${pres} ${prel} tchain 5 pchain 5 mtk yes"
+# Other thermostats
+if "${ens} == nvt && ${tst} != nh"  then "fix md free nve"
+if "${ens} == npt && ${tst} != nh"  then "fix md free nph ${npttype} ${pres} ${pres} ${prel} tchain 5 pchain 5 mtk yes"
+if "${tst} == ber"                  then "fix tst free temp/berendsen ${temp} ${temp} ${trel}"
+if "${tst} == lang"                 then "fix tst free langevin ${temp} ${temp} ${trel} ${i1} tally yes zero yes"
+if "${tst} == csvr"                 then "fix tst free temp/csvr ${temp} ${temp} ${trel} ${i1}"
+# Berendsen/CRescale barostats
+if "${ens} == nvt && ${brst} == ber" then "fix brst free press/berendsen ${npttype} ${pres} ${pres} ${prel} modulus ${bulkm}"
+if "${ens} == nvt && ${brst} == cresc" then "fix brst free press/crescale ${npttype} ${pres} ${pres} ${prel} temp ${temp} ${temp} modulus ${bulkm} seed ${iseed2}"
+label end_ensemble
+
+#compute myTemp free temp
+#fix_modify tst temp myTemp
+
+# ------ Thermodynamic output ----------------------
+#variable str_basic string 'step time pe c_myTemp press pxx pyy pzz'
+variable str_basic string 'step time pe temp press pxx pyy pzz pxy pxz pyz cella cellb cellc cellalpha cellbeta cellgamma etail'
+
+# ------ Use target pressure for the Enthalpy ------
+variable pv2h equal 1602191.7 # for metal units
+variable enth equal etotal+${pres}*vol/${pv2h}
+
+if "${ens} == nve" then "variable str_ens string 'etotal'"
+if "${ens} == nvt && ${brst} == no" then "variable str_ens string ''"
+if "${ens} == nvt && ${brst} != no" then "variable str_ens string 'vol density'"
+if "${ens} == npt" then "variable str_ens string 'vol density'"
+if "${ens} == nph" then "variable str_ens string 'vol v_enth'"
+
+thermo_style custom ${str_basic} ${str_ens} cpu 
+thermo ${nthermo}
+thermo_modify flush yes
+
+# ------ Time step ---------------------------------
+timestep ${timestep}
+
+# ------ Initial velocities and COM motion ---------
+if "${runID} == 0" then "velocity free create ${temp} ${i0} mom yes dist gaussian"
+fix com all momentum 1 linear 1 1 1
+
+# ------ Periodic Checkpoint -----------------------
+restart 10000 checkpoint.1 checkpoint.2
+
+# ------ Trajectory output -------------------------
+if "${ntraj} <= 0 || ${ntraj} > ${nsteps} || ${nsteps} == 0 || ${multiRun} == yes" then "jump SELF end_dump"
+  dump traj all ${trajType} ${ntraj} ${traj_file}.${trajType}
+  dump_modify traj unwrap yes
+label end_dump
+
+# ------ Thermodynamic integration -----------------
+if "${ti} == no" then "variable nt equal ${nsteps}" "jump SELF end_ti"
+  group tiAtoms id  2  3
+  fix ti tiAtoms ti/spring/only 1.5 ${nsteps} ${nequil} function 2
+  variable str_fix string "${str_fix} f_ti1[1] f_ti1[2] f_ti1"
+  variable nt equal 2*(${nsteps}+${nequil})
+ 
+  thermo_style custom ${str_basic} ${str_ens} ${str_fix} cpu
+  thermo ${nthermo}
+  thermo_modify flush yes
+  run ${nt}
+label end_ti
+ 
+# ------ Free Energy Perturbation ------------------
+if "${fep} == no" then "jump SELF end_fep"
+  print "--- RUNNING FEP ---"
+  kspace_modify gewald ${gewald}
+ 
+  group tiAtoms id  2  3
+  fix harm tiAtoms spring/self 1.5 xyz
+ 
+  include ${fep_file}
+  thermo_style custom ${str_basic} ${str_ens} cpu
+  thermo ${nthermo}
+  thermo_modify flush yeqrt(2/3*270*(boltzmann constant) * 0.001* 105415 
+  run ${nequil}
+  variable str_fix string "${str_fix} c_cFEP_f[1] c_cFEP_b[1]"
+  run ${nsteps}
+label end_fep
+
+# ------ Multiple Molecular Dynamics ------------------------
+if "${multiRun} == no" then "jump SELF end_multi"
+  if "${nequil} > 0 || ${runID} == 0" then "run ${nequil}"
+  dump traj all ${trajType} ${ntraj} ${traj_file}.${replID}.${trajType}
+  dump_modify traj unwrap yes
+  run ${nsteps}
+  if "${nsteps} > 0" then "write_restart ${new_restart}"
+label end_multi
+
+# ------ Molecular Dynamics ------------------------
+if "${md} == no && ${plumed} == no" then "jump SELF end_md"
+  run ${nsteps}
+  if "${nsteps} > 0" then "write_restart ${new_restart}"
+label end_md
+
